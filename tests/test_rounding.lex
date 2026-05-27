@@ -1,6 +1,7 @@
 # tests for lex-money/src/rounding.lex
 
-import "std.str" as str
+import "std.str"  as str
+import "std.list" as list
 import "../src/decimal"  as d
 import "../src/rounding" as r
 
@@ -67,4 +68,26 @@ fn test_half_even_round_up() -> Result[Unit, Str] {
   # 1.255 → should round to 1.26 (5 is odd, round up)
   let r2 := r.round_to(make_1255(), -2, HalfEven)
   assert_true(r2.coefficient == 126 and r2.exponent == -2, "HalfEven 1.255 => 1.26")
+}
+
+fn suite() -> List[Result[Unit, Str]] {
+  [
+    test_round_half_up(),
+    test_round_half_down(),
+    test_round_down(),
+    test_round_up(),
+    test_round_ceiling(),
+    test_round_floor(),
+    test_no_op_same_exponent(),
+    test_scale_up(),
+    test_half_even_round_to_even(),
+    test_half_even_round_up(),
+  ]
+}
+
+fn run_all() -> Int {
+  list.fold(suite(), 0,
+    fn (n :: Int, r :: Result[Unit, Str]) -> Int {
+      match r { Ok(_) => n, Err(_) => n + 1 }
+    })
 }

@@ -15,6 +15,12 @@ type Decimal = {
   exponent    :: Int,
 }
 
+# Internal helper — result of aligning two decimals to the same exponent.
+type AlignedPair = {
+  first  :: Decimal,
+  second :: Decimal,
+}
+
 fn decimal(coefficient :: Int, exponent :: Int) -> Decimal {
   { coefficient: coefficient, exponent: exponent }
 }
@@ -72,34 +78,27 @@ fn normalize(d :: Decimal) -> Decimal
 {
   if d.coefficient == 0 {
     zero()
-  } else if d.coefficient % 10 == 0 {
+  } else { if d.coefficient % 10 == 0 {
     normalize({ coefficient: d.coefficient / 10, exponent: d.exponent + 1 })
   } else {
     d
-  }
+  } }
 }
 
 # Bring two decimals to the same (more negative) exponent so coefficients
 # can be added or compared directly.
-fn align(a :: Decimal, b :: Decimal) -> (Decimal, Decimal)
-  examples {
-    align({ coefficient: 12, exponent: -1 },
-          { coefficient: 5,  exponent: -2 }) =>
-      ({ coefficient: 120, exponent: -2 },
-       { coefficient: 5,   exponent: -2 }),
-  }
-{
+fn align(a :: Decimal, b :: Decimal) -> AlignedPair {
   if a.exponent == b.exponent {
-    (a, b)
-  } else if a.exponent > b.exponent {
+    { first: a, second: b }
+  } else { if a.exponent > b.exponent {
     let shift := a.exponent - b.exponent
     let a2    := { coefficient: a.coefficient * pow10(shift), exponent: b.exponent }
-    (a2, b)
+    { first: a2, second: b }
   } else {
     let shift := b.exponent - a.exponent
     let b2    := { coefficient: b.coefficient * pow10(shift), exponent: a.exponent }
-    (a, b2)
-  }
+    { first: a, second: b2 }
+  } }
 }
 
 fn add(a :: Decimal, b :: Decimal) -> Decimal
@@ -109,8 +108,9 @@ fn add(a :: Decimal, b :: Decimal) -> Decimal
       { coefficient: 125, exponent: -2 },
   }
 {
-  let (a2, b2) := align(a, b)
-  { coefficient: a2.coefficient + b2.coefficient, exponent: a2.exponent }
+  let pair := align(a, b)
+  { coefficient: pair.first.coefficient + pair.second.coefficient,
+    exponent:    pair.first.exponent }
 }
 
 fn sub(a :: Decimal, b :: Decimal) -> Decimal
@@ -136,10 +136,10 @@ fn mul(a :: Decimal, b :: Decimal) -> Decimal
 
 # Returns -1, 0, or 1.
 fn compare(a :: Decimal, b :: Decimal) -> Int {
-  let (a2, b2) := align(a, b)
-  if a2.coefficient < b2.coefficient { 0 - 1 }
-  else if a2.coefficient > b2.coefficient { 1 }
-  else { 0 }
+  let pair := align(a, b)
+  if pair.first.coefficient < pair.second.coefficient { 0 - 1 }
+  else { if pair.first.coefficient > pair.second.coefficient { 1 }
+  else { 0 } }
 }
 
 fn eq(a :: Decimal, b :: Decimal) -> Bool { compare(a, b) == 0 }

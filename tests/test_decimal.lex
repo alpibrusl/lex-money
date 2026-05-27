@@ -1,6 +1,7 @@
 # tests for lex-money/src/decimal.lex
 
-import "std.str" as str
+import "std.str"  as str
+import "std.list" as list
 import "../src/decimal" as d
 
 fn pass() -> Result[Unit, Str] { Ok(()) }
@@ -99,4 +100,33 @@ fn test_normalize() -> Result[Unit, Str] {
 fn test_normalize_zero() -> Result[Unit, Str] {
   let x := d.normalize({ coefficient: 0, exponent: -5 })
   assert_true(x.coefficient == 0 and x.exponent == 0, "normalize zero")
+}
+
+fn suite() -> List[Result[Unit, Str]] {
+  [
+    test_from_int(),
+    test_zero(),
+    test_one(),
+    test_is_positive(),
+    test_is_negative(),
+    test_negate(),
+    test_abs(),
+    test_pow10(),
+    test_add_same_exponent(),
+    test_add_different_exponent(),
+    test_sub(),
+    test_mul(),
+    test_compare_eq(),
+    test_compare_lt(),
+    test_compare_gt(),
+    test_normalize(),
+    test_normalize_zero(),
+  ]
+}
+
+fn run_all() -> Int {
+  list.fold(suite(), 0,
+    fn (n :: Int, r :: Result[Unit, Str]) -> Int {
+      match r { Ok(_) => n, Err(_) => n + 1 }
+    })
 }

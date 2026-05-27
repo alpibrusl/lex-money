@@ -62,29 +62,30 @@ fn minor_units(c :: Currency) -> Int
 }
 
 fn from_code(s :: Str) -> Option[Currency] {
-  if s == "USD"      { Some(Usd) }
-  else if s == "EUR" { Some(Eur) }
-  else if s == "GBP" { Some(Gbp) }
-  else if s == "JPY" { Some(Jpy) }
-  else if s == "CHF" { Some(Chf) }
-  else if s == "CAD" { Some(Cad) }
-  else if s == "AUD" { Some(Aud) }
-  else if s == "HKD" { Some(Hkd) }
-  else if s == "SGD" { Some(Sgd) }
-  else if s == "NOK" { Some(Nok) }
-  else if s == "SEK" { Some(Sek) }
-  else if s == "DKK" { Some(Dkk) }
-  else if s == "PLN" { Some(Pln) }
-  else if s == "CZK" { Some(Czk) }
-  else if s == "HUF" { Some(Huf) }
-  else if s == "RON" { Some(Ron) }
-  else if s == "BGN" { Some(Bgn) }
-  else if s == "HRK" { Some(Hrk) }
-  else if s == "RUB" { Some(Rub) }
-  else if s == "CNY" { Some(Cny) }
-  else if s == "INR" { Some(Inr) }
-  else if s == "BRL" { Some(Brl) }
-  else if s == "MXN" { Some(Mxn) }
-  else if s == "ZAR" { Some(Zar) }
-  else               { None }
+  if s == "USD" { Some(Usd) }
+  else { if s == "EUR" { Some(Eur) }
+  else { if s == "GBP" { Some(Gbp) }
+  else { if s == "JPY" { Some(Jpy) }
+  else { if s == "CHF" { Some(Chf) }
+  else { if s == "CAD" { Some(Cad) }
+  else { if s == "AUD" { Some(Aud) }
+  else { if s == "HKD" { Some(Hkd) }
+  else { if s == "SGD" { Some(Sgd) }
+  else { if s == "NOK" { Some(Nok) }
+  else { if s == "SEK" { Some(Sek) }
+  else { if s == "DKK" { Some(Dkk) }
+  else { if s == "PLN" { Some(Pln) }
+  else { if s == "CZK" { Some(Czk) }
+  else { if s == "HUF" { Some(Huf) }
+  else { if s == "RON" { Some(Ron) }
+  else { if s == "BGN" { Some(Bgn) }
+  else { if s == "HRK" { Some(Hrk) }
+  else { if s == "RUB" { Some(Rub) }
+  else { if s == "CNY" { Some(Cny) }
+  else { if s == "INR" { Some(Inr) }
+  else { if s == "BRL" { Some(Brl) }
+  else { if s == "MXN" { Some(Mxn) }
+  else { if s == "ZAR" { Some(Zar) }
+  else { None }
+  } } } } } } } } } } } } } } } } } } } } } } }
 }

@@ -1,6 +1,7 @@
 # tests for lex-money/src/money.lex
 
 import "std.str"       as str
+import "std.list"      as list
 import "../src/currency" as currency
 import "../src/decimal"  as d
 import "../src/rounding" as r
@@ -93,4 +94,28 @@ fn test_compare_usd() -> Result[Unit, Str] {
     Err(_)  => fail("unexpected Err"),
     Ok(cmp) => assert_true(cmp == (0 - 1), "compare less"),
   }
+}
+
+fn suite() -> List[Result[Unit, Str]] {
+  [
+    test_zero_usd(),
+    test_zero_jpy(),
+    test_from_major_usd(),
+    test_from_major_jpy(),
+    test_add_usd(),
+    test_add_currency_mismatch(),
+    test_sub_usd(),
+    test_is_zero(),
+    test_is_positive(),
+    test_negate(),
+    test_scale_by_half(),
+    test_compare_usd(),
+  ]
+}
+
+fn run_all() -> Int {
+  list.fold(suite(), 0,
+    fn (n :: Int, r :: Result[Unit, Str]) -> Int {
+      match r { Ok(_) => n, Err(_) => n + 1 }
+    })
 }
