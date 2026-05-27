@@ -1,58 +1,41 @@
 # lex-money — exact decimal arithmetic
 #
+# Delegates to std.decimal (shipped in lex 0.9.5, lex-lang #574).
 # Decimal = { coefficient :: Int, exponent :: Int }
-# represents coefficient × 10^exponent.
-#
-# Examples:
-#   1.23  →  { coefficient: 123, exponent: -2 }
-#   1000  →  { coefficient: 1,   exponent:  3 }
-#   0.001 →  { coefficient: 1,   exponent: -3 }
+# represents coefficient × 10^exponent — no behavioral change for callers.
 #
 # Effects: none.
+
+import "std.decimal" as std_d
 
 type Decimal = {
   coefficient :: Int,
   exponent    :: Int,
 }
 
-# Internal helper — result of aligning two decimals to the same exponent.
-type AlignedPair = {
-  first  :: Decimal,
-  second :: Decimal,
-}
-
 fn decimal(coefficient :: Int, exponent :: Int) -> Decimal {
-  { coefficient: coefficient, exponent: exponent }
+  std_d.decimal(coefficient, exponent)
 }
 
-fn zero() -> Decimal { { coefficient: 0, exponent: 0 } }
-fn one()  -> Decimal { { coefficient: 1, exponent: 0 } }
+fn zero() -> Decimal { std_d.zero() }
+fn one()  -> Decimal { std_d.one() }
 
-fn from_int(n :: Int) -> Decimal { { coefficient: n, exponent: 0 } }
+fn from_int(n :: Int) -> Decimal { std_d.from_int(n) }
 
-fn is_zero(d :: Decimal) -> Bool { d.coefficient == 0 }
-
-fn is_positive(d :: Decimal) -> Bool { d.coefficient > 0 }
-
-fn is_negative(d :: Decimal) -> Bool { d.coefficient < 0 }
+fn is_zero(d :: Decimal) -> Bool     { std_d.is_zero(d) }
+fn is_positive(d :: Decimal) -> Bool { std_d.is_positive(d) }
+fn is_negative(d :: Decimal) -> Bool { std_d.is_negative(d) }
 
 fn negate(d :: Decimal) -> Decimal
   examples {
     negate({ coefficient: 123, exponent: -2 }) => { coefficient: -123, exponent: -2 },
   }
 {
-  { coefficient: 0 - d.coefficient, exponent: d.exponent }
+  std_d.negate(d)
 }
 
-fn abs(d :: Decimal) -> Decimal {
-  if d.coefficient < 0 {
-    negate(d)
-  } else {
-    d
-  }
-}
+fn abs(d :: Decimal) -> Decimal { std_d.abs(d) }
 
-# 10^n — computed recursively (only for n >= 0).
 fn pow10(n :: Int) -> Int
   examples {
     pow10(0) => 1,
@@ -60,15 +43,9 @@ fn pow10(n :: Int) -> Int
     pow10(3) => 1000,
   }
 {
-  if n <= 0 {
-    1
-  } else {
-    10 * pow10(n - 1)
-  }
+  std_d.pow10(n)
 }
 
-# Remove trailing zeros from coefficient by increasing exponent.
-# { coefficient: 120, exponent: -3 } → { coefficient: 12, exponent: -2 }
 fn normalize(d :: Decimal) -> Decimal
   examples {
     normalize({ coefficient: 120, exponent: -3 }) => { coefficient: 12, exponent: -2 },
@@ -76,29 +53,7 @@ fn normalize(d :: Decimal) -> Decimal
     normalize({ coefficient: 0,   exponent: -5 }) => { coefficient: 0,  exponent:  0 },
   }
 {
-  if d.coefficient == 0 {
-    zero()
-  } else { if d.coefficient % 10 == 0 {
-    normalize({ coefficient: d.coefficient / 10, exponent: d.exponent + 1 })
-  } else {
-    d
-  } }
-}
-
-# Bring two decimals to the same (more negative) exponent so coefficients
-# can be added or compared directly.
-fn align(a :: Decimal, b :: Decimal) -> AlignedPair {
-  if a.exponent == b.exponent {
-    { first: a, second: b }
-  } else { if a.exponent > b.exponent {
-    let shift := a.exponent - b.exponent
-    let a2    := { coefficient: a.coefficient * pow10(shift), exponent: b.exponent }
-    { first: a2, second: b }
-  } else {
-    let shift := b.exponent - a.exponent
-    let b2    := { coefficient: b.coefficient * pow10(shift), exponent: a.exponent }
-    { first: a, second: b2 }
-  } }
+  std_d.normalize(d)
 }
 
 fn add(a :: Decimal, b :: Decimal) -> Decimal
@@ -108,9 +63,7 @@ fn add(a :: Decimal, b :: Decimal) -> Decimal
       { coefficient: 125, exponent: -2 },
   }
 {
-  let pair := align(a, b)
-  { coefficient: pair.first.coefficient + pair.second.coefficient,
-    exponent:    pair.first.exponent }
+  std_d.add(a, b)
 }
 
 fn sub(a :: Decimal, b :: Decimal) -> Decimal
@@ -120,7 +73,7 @@ fn sub(a :: Decimal, b :: Decimal) -> Decimal
       { coefficient: 100, exponent: -2 },
   }
 {
-  add(a, negate(b))
+  std_d.sub(a, b)
 }
 
 fn mul(a :: Decimal, b :: Decimal) -> Decimal
@@ -130,20 +83,13 @@ fn mul(a :: Decimal, b :: Decimal) -> Decimal
       { coefficient: 36, exponent: -1 },
   }
 {
-  { coefficient: a.coefficient * b.coefficient,
-    exponent:    a.exponent    + b.exponent }
+  std_d.mul(a, b)
 }
 
-# Returns -1, 0, or 1.
-fn compare(a :: Decimal, b :: Decimal) -> Int {
-  let pair := align(a, b)
-  if pair.first.coefficient < pair.second.coefficient { 0 - 1 }
-  else { if pair.first.coefficient > pair.second.coefficient { 1 }
-  else { 0 } }
-}
+fn compare(a :: Decimal, b :: Decimal) -> Int { std_d.compare(a, b) }
 
-fn eq(a :: Decimal, b :: Decimal) -> Bool { compare(a, b) == 0 }
-fn lt(a :: Decimal, b :: Decimal) -> Bool { compare(a, b) == (0 - 1) }
-fn gt(a :: Decimal, b :: Decimal) -> Bool { compare(a, b) == 1 }
+fn eq(a :: Decimal, b :: Decimal) -> Bool  { compare(a, b) == 0 }
+fn lt(a :: Decimal, b :: Decimal) -> Bool  { compare(a, b) == (0 - 1) }
+fn gt(a :: Decimal, b :: Decimal) -> Bool  { compare(a, b) == 1 }
 fn lte(a :: Decimal, b :: Decimal) -> Bool { not (gt(a, b)) }
 fn gte(a :: Decimal, b :: Decimal) -> Bool { not (lt(a, b)) }
