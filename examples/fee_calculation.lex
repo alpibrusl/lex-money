@@ -27,7 +27,7 @@ fn run() -> Str {
   let rate := { coefficient: 5, exponent: -4 }
 
   # Fee = notional × rate, rounded HalfUp to 2 decimal places
-  let fee := m.scale(notional, rate, HalfUp)
+  let fee := m.scale(notional, rate, HalfUp(()))
 
   # fee.amount == 63, fee.exponent == -2  →  USD 0.63
   if fee.amount == 63 {

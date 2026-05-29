@@ -1,13 +1,25 @@
 # tests for lex-money/src/decimal.lex
 
-import "std.str"  as str
+import "std.str" as str
+
 import "std.list" as list
+
 import "../src/decimal" as d
 
-fn pass() -> Result[Unit, Str] { Ok(()) }
-fn fail(why :: Str) -> Result[Unit, Str] { Err(why) }
+fn pass() -> Result[Unit, Str] {
+  Ok(())
+}
+
+fn fail(why :: Str) -> Result[Unit, Str] {
+  Err(why)
+}
+
 fn assert_true(cond :: Bool, label :: Str) -> Result[Unit, Str] {
-  if cond { pass() } else { fail(label) }
+  if cond {
+    pass()
+  } else {
+    fail(label)
+  }
 }
 
 fn test_from_int() -> Result[Unit, Str] {
@@ -34,7 +46,7 @@ fn test_is_negative() -> Result[Unit, Str] {
 
 fn test_negate() -> Result[Unit, Str] {
   let x := d.negate(d.from_int(7))
-  assert_true(x.coefficient == (0 - 7), "negate")
+  assert_true(x.coefficient == 0 - 7, "negate")
 }
 
 fn test_abs() -> Result[Unit, Str] {
@@ -55,28 +67,28 @@ fn test_add_same_exponent() -> Result[Unit, Str] {
 
 fn test_add_different_exponent() -> Result[Unit, Str] {
   let a := { coefficient: 12, exponent: -1 }
-  let b := { coefficient:  5, exponent: -2 }
+  let b := { coefficient: 5, exponent: -2 }
   let r := d.add(a, b)
   assert_true(r.coefficient == 125 and r.exponent == -2, "add diff exp")
 }
 
 fn test_sub() -> Result[Unit, Str] {
   let a := { coefficient: 150, exponent: -2 }
-  let b := { coefficient:  50, exponent: -2 }
+  let b := { coefficient: 50, exponent: -2 }
   let r := d.sub(a, b)
   assert_true(r.coefficient == 100 and r.exponent == -2, "sub")
 }
 
 fn test_mul() -> Result[Unit, Str] {
   let a := { coefficient: 12, exponent: -1 }
-  let b := { coefficient:  3, exponent:  0 }
+  let b := { coefficient: 3, exponent: 0 }
   let r := d.mul(a, b)
   assert_true(r.coefficient == 36 and r.exponent == -1, "mul")
 }
 
 fn test_compare_eq() -> Result[Unit, Str] {
   let a := { coefficient: 100, exponent: -2 }
-  let b := { coefficient: 1,   exponent: 0  }
+  let b := { coefficient: 1, exponent: 0 }
   assert_true(d.eq(a, b), "compare eq: 1.00 == 1")
 }
 
@@ -103,30 +115,15 @@ fn test_normalize_zero() -> Result[Unit, Str] {
 }
 
 fn suite() -> List[Result[Unit, Str]] {
-  [
-    test_from_int(),
-    test_zero(),
-    test_one(),
-    test_is_positive(),
-    test_is_negative(),
-    test_negate(),
-    test_abs(),
-    test_pow10(),
-    test_add_same_exponent(),
-    test_add_different_exponent(),
-    test_sub(),
-    test_mul(),
-    test_compare_eq(),
-    test_compare_lt(),
-    test_compare_gt(),
-    test_normalize(),
-    test_normalize_zero(),
-  ]
+  [test_from_int(), test_zero(), test_one(), test_is_positive(), test_is_negative(), test_negate(), test_abs(), test_pow10(), test_add_same_exponent(), test_add_different_exponent(), test_sub(), test_mul(), test_compare_eq(), test_compare_lt(), test_compare_gt(), test_normalize(), test_normalize_zero()]
 }
 
 fn run_all() -> Int {
-  list.fold(suite(), 0,
-    fn (n :: Int, r :: Result[Unit, Str]) -> Int {
-      match r { Ok(_) => n, Err(_) => n + 1 }
-    })
+  list.fold(suite(), 0, fn (n :: Int, r :: Result[Unit, Str]) -> Int {
+    match r {
+      Ok(_) => n,
+      Err(_) => n + 1,
+    }
+  })
 }
+

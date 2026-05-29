@@ -1,16 +1,31 @@
 # tests for lex-money/src/money.lex
 
-import "std.str"       as str
-import "std.list"      as list
-import "../src/currency" as currency
-import "../src/decimal"  as d
-import "../src/rounding" as r
-import "../src/money"    as m
+import "std.str" as str
 
-fn pass() -> Result[Unit, Str] { Ok(()) }
-fn fail(why :: Str) -> Result[Unit, Str] { Err(why) }
+import "std.list" as list
+
+import "../src/currency" as currency
+
+import "../src/decimal" as d
+
+import "../src/rounding" as r
+
+import "../src/money" as m
+
+fn pass() -> Result[Unit, Str] {
+  Ok(())
+}
+
+fn fail(why :: Str) -> Result[Unit, Str] {
+  Err(why)
+}
+
 fn assert_true(cond :: Bool, label :: Str) -> Result[Unit, Str] {
-  if cond { pass() } else { fail(label) }
+  if cond {
+    pass()
+  } else {
+    fail(label)
+  }
 }
 
 fn test_zero_usd() -> Result[Unit, Str] {
@@ -34,11 +49,11 @@ fn test_from_major_jpy() -> Result[Unit, Str] {
 }
 
 fn test_add_usd() -> Result[Unit, Str] {
-  let a  := { amount: 1000, currency: Usd, exponent: -2 }
-  let b  := { amount:  500, currency: Usd, exponent: -2 }
-  let r  := m.add(a, b)
+  let a := { amount: 1000, currency: Usd, exponent: -2 }
+  let b := { amount: 500, currency: Usd, exponent: -2 }
+  let r := m.add(a, b)
   match r {
-    Err(_)  => fail("unexpected Err"),
+    Err(_) => fail("unexpected Err"),
     Ok(res) => assert_true(res.amount == 1500, "add USD"),
   }
 }
@@ -48,17 +63,17 @@ fn test_add_currency_mismatch() -> Result[Unit, Str] {
   let b := { amount: 1000, currency: Eur, exponent: -2 }
   let r := m.add(a, b)
   match r {
-    Ok(_)  => fail("expected Err on mismatch"),
+    Ok(_) => fail("expected Err on mismatch"),
     Err(_) => pass(),
   }
 }
 
 fn test_sub_usd() -> Result[Unit, Str] {
   let a := { amount: 2000, currency: Usd, exponent: -2 }
-  let b := { amount:  500, currency: Usd, exponent: -2 }
+  let b := { amount: 500, currency: Usd, exponent: -2 }
   let r := m.sub(a, b)
   match r {
-    Err(_)  => fail("unexpected Err"),
+    Err(_) => fail("unexpected Err"),
     Ok(res) => assert_true(res.amount == 1500, "sub USD"),
   }
 }
@@ -79,10 +94,9 @@ fn test_negate() -> Result[Unit, Str] {
 }
 
 fn test_scale_by_half() -> Result[Unit, Str] {
-  # USD 10.00 * 0.5 = USD 5.00
-  let v      := m.from_major(10, Usd)
+  let v := m.from_major(10, Usd)
   let factor := { coefficient: 5, exponent: -1 }
-  let result := m.scale(v, factor, HalfUp)
+  let result := m.scale(v, factor, HalfUp(()))
   assert_true(result.amount == 500 and result.exponent == -2, "scale half")
 }
 
@@ -91,31 +105,21 @@ fn test_compare_usd() -> Result[Unit, Str] {
   let b := m.from_major(20, Usd)
   let r := m.compare(a, b)
   match r {
-    Err(_)  => fail("unexpected Err"),
-    Ok(cmp) => assert_true(cmp == (0 - 1), "compare less"),
+    Err(_) => fail("unexpected Err"),
+    Ok(cmp) => assert_true(cmp == 0 - 1, "compare less"),
   }
 }
 
 fn suite() -> List[Result[Unit, Str]] {
-  [
-    test_zero_usd(),
-    test_zero_jpy(),
-    test_from_major_usd(),
-    test_from_major_jpy(),
-    test_add_usd(),
-    test_add_currency_mismatch(),
-    test_sub_usd(),
-    test_is_zero(),
-    test_is_positive(),
-    test_negate(),
-    test_scale_by_half(),
-    test_compare_usd(),
-  ]
+  [test_zero_usd(), test_zero_jpy(), test_from_major_usd(), test_from_major_jpy(), test_add_usd(), test_add_currency_mismatch(), test_sub_usd(), test_is_zero(), test_is_positive(), test_negate(), test_scale_by_half(), test_compare_usd()]
 }
 
 fn run_all() -> Int {
-  list.fold(suite(), 0,
-    fn (n :: Int, r :: Result[Unit, Str]) -> Int {
-      match r { Ok(_) => n, Err(_) => n + 1 }
-    })
+  list.fold(suite(), 0, fn (n :: Int, r :: Result[Unit, Str]) -> Int {
+    match r {
+      Ok(_) => n,
+      Err(_) => n + 1,
+    }
+  })
 }
+
