@@ -16,9 +16,10 @@ A `Decimal` is a `coefficient × 10^exponent` pair. A `Money` wraps a `Decimal` 
 ## Usage
 
 ```lex
-import "lex-money/currency" as currency
-import "lex-money/money"    as m
-import "lex-money/rounding" as r
+import "lex-money/src/currency" as currency
+import "lex-money/src/decimal"  as d
+import "lex-money/src/money"    as m
+import "lex-money/src/rounding" as r
 
 # USD 12.50
 let price    := m.money(1250, Usd, -2)
@@ -26,12 +27,12 @@ let price    := m.money(1250, Usd, -2)
 # USD 5.00
 let discount := m.from_major(5, Usd)
 
-# USD 17.50
+# USD 17.50  (add returns Result[Money, Str] — currencies must match)
 let total    := m.add(price, discount)
 
 # Apply 10% fee, round half-up
-let factor   := { coefficient: 1, exponent: -1 }   # 0.1
-let fee      := m.scale(price, factor, HalfUp)      # USD 1.25
+let factor   := d.decimal(1, -1)               # 0.1  (Decimal from lex-money/decimal)
+let fee      := m.scale(price, factor, HalfUp(()))  # USD 1.25
 ```
 
 ## Design note
