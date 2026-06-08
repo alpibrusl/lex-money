@@ -1,43 +1,75 @@
 # lex-money
 
-Exact decimal monetary arithmetic for the [Lex language](https://github.com/alpibrusl/lex-lang).
+Exact decimal monetary arithmetic for Lex. No floating point. No silent rounding.
 
-lex-lang provides only `Int` (arbitrary-precision integer) and `Float` (IEEE 754 double). Floating-point arithmetic is unsuitable for money: `0.1 + 0.2 != 0.3` in binary floating-point, and rounding errors accumulate across trade legs, fee calculations, and settlement flows. lex-money fills this gap using scaled-integer representation — the same approach used by financial industry libraries and SQL `DECIMAL` types.
+`0.1 + 0.2` is not `0.3` in IEEE 754 — in a trading system that error compounds across thousands of fills. Every value here is `coefficient × 10^exponent` (e.g. `$175.00` = `decimal(17500, -2)`), so arithmetic is exact, round-trips are lossless, and every rounding decision is an explicit call with a named mode.
 
-A `Decimal` is a `coefficient × 10^exponent` pair. A `Money` wraps a `Decimal` with an ISO 4217 currency code and enforces that arithmetic operations stay within the same currency. All rounding is explicit: callers name a `RoundingMode` at every site where precision is reduced.
-
-## What it ships
-
-- **`src/currency.lex`** — ISO 4217 currency ADT (`Usd`, `Eur`, `Gbp`, `Jpy`, …), `code/1`, `minor_units/1`, `from_code/1`.
-- **`src/decimal.lex`** — `Decimal` type, `add`, `sub`, `mul`, `compare`, `normalize`, `align`, `pow10`.
-- **`src/rounding.lex`** — `RoundingMode` ADT (`HalfUp`, `HalfDown`, `HalfEven`, `Down`, `Up`, `Ceiling`, `Floor`) and `round_to/3`.
-- **`src/money.lex`** — `Money` type, `add`, `sub`, `scale`, `compare`, `zero`, `from_major`, `negate`, `abs`.
-
-## Usage
-
-```lex
-import "lex-money/currency" as currency
-import "lex-money/money"    as m
-import "lex-money/rounding" as r
-
-# USD 12.50
-let price    := m.money(1250, Usd, -2)
-
-# USD 5.00
-let discount := m.from_major(5, Usd)
-
-# USD 17.50
-let total    := m.add(price, discount)
-
-# Apply 10% fee, round half-up
-let factor   := { coefficient: 1, exponent: -1 }   # 0.1
-let fee      := m.scale(price, factor, HalfUp)      # USD 1.25
-```
-
-## Design note
-
-Making catastrophic money errors a **type error** rather than a runtime surprise is exactly the kind of property an agent-native substrate should enforce. An agent that generates a monetary computation either produces a well-typed `Money` value — verified by the type system to carry a currency and a precision — or the substrate rejects it. No float-to-decimal silent coercion, no implicit currency conversion.
+This is the foundation of the stack. Every price, notional, margin, PnL, and fee in every upstream package is a `Decimal` or `Money` from here.
 
 ---
 
-Built under the principles of [Trust Without Comprehension](https://alpibru.com/manifesto).
+## Modules
+
+### `decimal` — scaled-integer arithmetic
+
+```lex
+import "lex-money/src/decimal" as d
+
+let price    := d.decimal(17500, -2)   # $175.00
+let qty      := d.from_int(200000)
+let notional := d.mul(price, qty)      # $35,000,000.00 — exact
+```
+
+`add`, `sub`, `mul`, `compare`, `normalize`, `abs`, `negate`, `pow10`, `is_zero`, `is_positive`.
+
+### `money` — currency-typed values
+
+```lex
+import "lex-money/src/money"    as money
+import "lex-money/src/currency" as ccy
+
+let price := money.from_major(Usd, d.from_int(175))
+let zero  := money.zero(Eur)
+let total := money.add(price, price)   # Ok(...)
+# money.add(price, zero)               # type error — mismatched currencies
+```
+
+`Money = (Decimal, Currency)`. Arithmetic on mismatched currencies is a type error.
+
+### `currency` — ISO 4217
+
+25 currencies: `Usd`, `Eur`, `Gbp`, `Chf`, `Jpy`, `Cad`, `Aud`, `Hkd`, `Sgd`, `Nok`, `Sek`, `Dkk`, `Pln`, `Czk`, `Huf`, `Ron`, `Bgn`, `Rub`, `Cny`, `Inr`, `Brl`, `Mxn`, `Zar`.
+
+```lex
+ccy.code(Chf)          # "CHF"
+ccy.minor_units(Jpy)   # 0  (yen has no minor units)
+ccy.from_code("USD")   # Some(Usd)
+```
+
+### `rounding` — explicit modes
+
+```lex
+import "lex-money/src/rounding" as round
+round.round_to(d.decimal(175499, -3), d.decimal(1, -2), HalfEven)  # $175.50
+```
+
+`HalfUp`, `HalfDown`, `HalfEven` (banker's), `Up`, `Down`, `Ceiling`, `Floor`. Every rounding site names its mode — there is no default.
+
+---
+
+## In the stack
+
+```
+lex-money  ←  no dependencies
+    ↓
+lex-fix · lex-positions · lex-risk · lex-trade · lex-marketdata · lex-sor · lex-finance · lex-oms
+```
+
+---
+
+## Install
+
+```toml
+[dependencies]
+"lex-money" = { git = "https://github.com/alpibrusl/lex-money" }
+```
