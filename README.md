@@ -1,5 +1,9 @@
 # lex-money
 
+[![CI](https://github.com/alpibrusl/lex-money/actions/workflows/ci.yml/badge.svg)](https://github.com/alpibrusl/lex-money/actions/workflows/ci.yml)
+
+**Part of the [Lex](https://lexlang.org) project** — Library · [Manifesto](https://lexlang.org/manifesto) · [All packages](https://lexlang.org)
+
 Exact decimal monetary arithmetic for Lex. No floating point. No silent rounding.
 
 `0.1 + 0.2` is not `0.3` in IEEE 754 — in a trading system that error compounds across thousands of fills. Every value here is `coefficient × 10^exponent` (e.g. `$175.00` = `decimal(17500, -2)`), so arithmetic is exact, round-trips are lossless, and every rounding decision is an explicit call with a named mode.
