@@ -1,4 +1,4 @@
 [package]
 name    = "lex-money"
 version = "0.1.0"
-lex     = "0.9.7"
+lex     = "0.9.12"
