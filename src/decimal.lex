@@ -8,6 +8,10 @@
 
 import "std.decimal" as std_d
 
+import "std.str" as str
+
+import "std.list" as list
+
 type Decimal = { coefficient :: Int, exponent :: Int }
 
 fn decimal(coefficient :: Int, exponent :: Int) -> Decimal {
@@ -118,3 +122,86 @@ fn gte(a :: Decimal, b :: Decimal) -> Bool {
   not lt(a, b)
 }
 
+
+# ── Wire representation ───────────────────────────────────────────────────────
+# Decimals cross process boundaries as STRINGS ("66.10", "-0.05") — floats on
+# the wire would defeat the whole package. to_str delegates to std.decimal;
+# parse is strict: optional sign, digits, optional fraction. Anything else
+# (exponents, spaces, thousands separators, empty parts) is None, not a guess.
+
+fn to_str(dec :: Decimal) -> Str {
+  std_d.to_str(dec)
+}
+
+fn digits_value(s :: Str) -> Option[Int] {
+  if str.is_empty(s) {
+    None
+  } else {
+    match str.to_int(s) {
+      Some(n) => if n < 0 {
+        None
+      } else {
+        Some(n)
+      },
+      None => None,
+    }
+  }
+}
+
+fn parse(s :: Str) -> Option[Decimal] {
+  let neg := str.starts_with(s, "-")
+  let body := if neg {
+    str.slice(s, 1, str.len(s))
+  } else {
+    s
+  }
+  let parts := str.split(body, ".")
+  let n_parts := list.len(parts)
+  if n_parts < 1 or n_parts > 2 or str.is_empty(body) {
+    None
+  } else {
+    let int_part := match list.head(parts) {
+      Some(p) => p,
+      None => "",
+    }
+    let frac_part := if n_parts == 2 {
+      match list.head(list.tail(parts)) {
+        Some(p) => p,
+        None => "",
+      }
+    } else {
+      ""
+    }
+    match digits_value(int_part) {
+      None => None,
+      Some(whole) => {
+        if str.is_empty(frac_part) {
+          if n_parts == 2 {
+            None
+          } else {
+            let c := if neg {
+              0 - whole
+            } else {
+              whole
+            }
+            Some(decimal(c, 0))
+          }
+        } else {
+          match digits_value(frac_part) {
+            None => None,
+            Some(frac) => {
+              let scale := str.len(frac_part)
+              let coeff := whole * pow10(scale) + frac
+              let c := if neg {
+                0 - coeff
+              } else {
+                coeff
+              }
+              Some(decimal(c, 0 - scale))
+            },
+          }
+        }
+      },
+    }
+  }
+}
