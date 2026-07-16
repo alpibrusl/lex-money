@@ -127,3 +127,40 @@ fn run_all() -> Int {
   })
 }
 
+
+fn test_parse_plain_and_fraction() -> Result[Unit, Str] {
+  match d.parse("66.10") {
+    None => fail("66.10 should parse"),
+    Some(x) => match assert_true(x.coefficient == 6610 and x.exponent == -2, "66.10 -> 6610e-2") {
+      Err(e) => Err(e),
+      Ok(_) => match d.parse("-0.05") {
+        None => fail("-0.05 should parse"),
+        Some(y) => match assert_true(y.coefficient == -5 and y.exponent == -2, "-0.05 -> -5e-2") {
+          Err(e) => Err(e),
+          Ok(_) => match d.parse("42") {
+            None => fail("42 should parse"),
+            Some(z) => assert_true(z.coefficient == 42 and z.exponent == 0, "42 -> 42e0"),
+          },
+        },
+      },
+    },
+  }
+}
+
+fn none_rejected(s :: Str) -> Bool {
+  match d.parse(s) {
+    None => true,
+    Some(_) => false,
+  }
+}
+
+fn test_parse_rejects_garbage() -> Result[Unit, Str] {
+  assert_true(none_rejected("") and none_rejected("1.2.3") and none_rejected("1,50") and none_rejected("abc") and none_rejected("1."), "garbage rejected")
+}
+
+fn test_to_str_round_trips() -> Result[Unit, Str] {
+  match d.parse("11399.99") {
+    None => fail("11399.99 should parse"),
+    Some(x) => assert_true(d.to_str(x) == "11399.99", str.concat("round trip got ", d.to_str(x))),
+  }
+}
