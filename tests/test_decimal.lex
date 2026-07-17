@@ -127,7 +127,6 @@ fn run_all() -> Int {
   })
 }
 
-
 fn test_parse_plain_and_fraction() -> Result[Unit, Str] {
   match d.parse("66.10") {
     None => fail("66.10 should parse"),
@@ -164,3 +163,4 @@ fn test_to_str_round_trips() -> Result[Unit, Str] {
     Some(x) => assert_true(d.to_str(x) == "11399.99", str.concat("round trip got ", d.to_str(x))),
   }
 }
+

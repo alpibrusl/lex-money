@@ -118,12 +118,10 @@ fn abs(m :: Money) -> Money {
   }
 }
 
-
 # ── Wire representation ───────────────────────────────────────────────────────
 # parse accepts a strict decimal string and canonicalizes to the currency's
 # minor units with the given rounding mode; format renders the canonical
 # amount back out. Round-trips are stable: format(parse(s)) is canonical.
-
 fn parse(s :: Str, cur :: currency.Currency, mode :: r.RoundingMode) -> Option[Money] {
   match d.parse(s) {
     None => None,
@@ -137,3 +135,4 @@ fn parse(s :: Str, cur :: currency.Currency, mode :: r.RoundingMode) -> Option[M
 fn format(m :: Money) -> Str {
   d.to_str(r.round_to(to_decimal(m), canonical_exponent(m.currency), HalfUp(())))
 }
+
