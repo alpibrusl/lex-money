@@ -122,13 +122,11 @@ fn gte(a :: Decimal, b :: Decimal) -> Bool {
   not lt(a, b)
 }
 
-
 # ── Wire representation ───────────────────────────────────────────────────────
 # Decimals cross process boundaries as STRINGS ("66.10", "-0.05") — floats on
 # the wire would defeat the whole package. to_str delegates to std.decimal;
 # parse is strict: optional sign, digits, optional fraction. Anything else
 # (exponents, spaces, thousands separators, empty parts) is None, not a guess.
-
 fn to_str(dec :: Decimal) -> Str {
   std_d.to_str(dec)
 }
@@ -205,3 +203,4 @@ fn parse(s :: Str) -> Option[Decimal] {
     }
   }
 }
+
