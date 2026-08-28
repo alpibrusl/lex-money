@@ -77,3 +77,9 @@ lex-fix · lex-positions · lex-risk · lex-trade · lex-marketdata · lex-sor �
 [dependencies]
 "lex-money" = { git = "https://github.com/alpibrusl/lex-money" }
 ```
+
+## License
+
+Copyright (c) 2026 lex-money contributors.
+
+Licensed under the [EUPL-1.2](LICENSE) — the European Union Public Licence, as used across the `lex-*` ecosystem.
